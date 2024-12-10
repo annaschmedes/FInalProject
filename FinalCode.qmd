@@ -1,0 +1,150 @@
+---
+title: "Final Project Code"
+format: html
+editor: visual
+---
+
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+```
+```{r}
+data = read.csv("urban_connectivity.csv")
+data #load in data set 
+```
+```{r}
+```
+
+```{r}
+unwalkable_black_less_all <- data |> #determine how many cities are more walkable for all residents than to black residents
+  filter(Walkable_Park_Access_black < Walkable_Park_Access_all_residents) |>
+  nrow()
+
+unwalkable_hispanic_less_all <- data |> #determine how many cities are more walkable for all residents than to hispanic residents
+  filter(Walkable_Park_Access_hispanic_latinx < Walkable_Park_Access_all_residents) |>
+  nrow()
+
+unwalkable_POC_all <- data |> #determine how many cities are more walkable for all residents than to POC residents
+  filter(Walkable_Park_Access_all_people_of_color < Walkable_Park_Access_all_residents) |>
+  nrow()
+
+unwalkable_asian_less_all <- data |> #determine how many cities are more walkable for all residents than to asian residents
+  filter(Walkable_Park_Access_asian < Walkable_Park_Access_all_residents) |>
+  nrow()
+
+
+unwalkable_pacific_less_all <- data |> #determine how many cities are more walkable for all residents than to pacific islander
+  filter(Walkable_Park_Access_pacific_islander < Walkable_Park_Access_all_residents) |>
+  nrow()
+
+
+unwalkable_americanindian_less_all <- data |> #determine how many cities are more walkable for all residents than to american indian/ alaska native 
+  filter(Walkable_Park_Access_american_indian_alaska_native < Walkable_Park_Access_all_residents) |>
+  nrow()
+
+unwalkable_white_less_all <- data |> #determine how many cities are more walkable for all residents than to white residents
+  filter(Walkable_Park_Access_white < Walkable_Park_Access_all_residents) |>
+  nrow()
+```
+```{r}
+unwalkable_data_compared_to_all <- data.frame( #make a dataframe with these new values and call them the unwalkable_demographics
+  Group = c("Black", "Hispanic/Latinx", "All POC", "Asian", "Pacific Islander", "American Indian/Alaskan", "White"),
+  Unwalkable_demographics = c(unwalkable_black_less_all, unwalkable_hispanic_less_all, unwalkable_POC_all, unwalkable_asian_less_all, unwalkable_pacific_less_all, unwalkable_americanindian_less_all, unwalkable_white_less_all)
+)
+#plot this new data frame in a bar graph with the demographic groups on the x axis and the amount of cities for each value on the y axis. give the bar a title. 
+ggplot(unwalkable_data_compared_to_all, aes(x = Group, y = Unwalkable_demographics)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Number of Unwalkable Cities to Parks for Different Groups Compared to All Residents", x = "Group", y = "Number of Unwalkable Cities")
+
+```
+```{r}
+unwalkable_black <- data |> #determine how many cities are unwalkable for black residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_black < "0.5") |>
+  nrow()
+
+unwalkable_hispanic <- data |> #determine how many cities are unwalkable for hispanic residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_hispanic_latinx < "0.5") |>
+  nrow()
+
+unwalkable_POC <- data |> #determine how many cities are unwalkable for POC residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_all_people_of_color < "0.5") |>
+  nrow()
+
+unwalkable_asian <- data |> #determine how many cities are unwalkable for asian residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_asian < "0.5") |>
+  nrow()
+
+
+unwalkable_pacific <- data |> #determine how many cities are unwalkable for pacific islander residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_pacific_islander < "0.5") |>
+  nrow()
+
+
+unwalkable_americanindian <- data |> #determine how many cities are unwalkable for american indian residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_american_indian_alaska_native < "0.5") |>
+  nrow()
+
+unwalkable_white <- data |> #determine how many cities are unwalkable for white residents, using anything below 0.5 as unwalkable
+  filter(Walkable_Park_Access_white < "0.5") |>
+  nrow()
+```
+```{r}
+unwalkable_data_demographics <- data.frame(  #make a dataframe with these new values and call them the unwalkable_cities
+  Group = c("Black", "Hispanic/Latinx", "All POC", "Asian", "Pacific Islander", "American Indian/Alaskan", "White"),
+  Unwalkable_Cities = c(unwalkable_black, unwalkable_hispanic, unwalkable_POC, unwalkable_asian, unwalkable_pacific, unwalkable_americanindian, unwalkable_white)
+)
+#plot this new data frame in a bar graph with the demographic groups on the x axis and the amount of cities for each value on the y axis. give the bar a title. 
+ggplot(unwalkable_data_demographics, aes(x = Group, y = Unwalkable_Cities)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Number of Unwalkable Cities to Parks for Different Groups", x = "Group", y = "Number of Unwalkable Cities")
+
+```
+```{r}
+unwalkable_data <- data |> # duplicate the original data set and add a new column based on the Walk.Score value. use the case_when function to say when the Walk.Score is x value, that means the new column is "". also add a new column that takes the walk, transit, and bike scores to make an average score, filter the data to only be the unwalkable cities to parks. do this by filtering Walkable_Park_Access_all_residents and the new value, Average.Score
+  mutate(
+    Walkability = case_when(
+      Walk.Score >= 0 & Walk.Score <= 24 ~ "Poor",
+      Walk.Score >= 25 & Walk.Score <= 49 ~ "Mediocre",
+      Walk.Score >= 50 & Walk.Score <= 69 ~ "Good",
+      Walk.Score >= 70 & Walk.Score <= 89 ~ "Great",
+      Walk.Score >= 90 & Walk.Score <= 100 ~ "Amazing",
+    )
+  ) |>
+  mutate(Average.Score = (Walk.Score + Transit.Score + Bike.Score)/3) |>
+  filter(Walkable_Park_Access_all_residents <= "0.5" & Average.Score <= "50")
+#make a new table that takes only select columns from the unwalkable_data table
+unwalkable_data_specific <- unwalkable_data |>
+  select(Place_name, Walkable_Park_Access_all_residents, Walk.Score,Walkability, Average.Score)
+print(unwalkable_data_specific)
+```
+```{r}
+durham_data <- unwalkable_data_specific |> #create a durham only tabel that just select durham out of the unwalkable data specific table. 
+  filter(Place_name == "Durham, NC")
+```
+```{r}
+#create a new table that finds the cities that have less than 50% walkability to park for BIPOC
+unwalkable_BIPOC_data <- data |>
+  filter(Walkable_Park_Access_black <= "0.5") |>
+  filter(Walkable_Park_Access_american_indian_alaska_native <="0.5") |>
+  filter(Walkable_Park_Access_all_people_of_color <= "0.5") 
+```
+
+```{r}
+unwalkable_BIPOC_data <- unwalkable_BIPOC_data |>
+  select(City, State, Walk.Score, Transit.Score, Bike.Score, Population_2022_Census, Parkland_Stats_by_City_total_park_units, Walkable_Park_Access_all_residents, Walkable_Park_Access_black, Walkable_Park_Access_hispanic_latinx, Walkable_Park_Access_asian, Walkable_Park_Access_other_race, Walkable_Park_Access_multiple_races, Walkable_Park_Access_pacific_islander, Walkable_Park_Access_american_indian_alaska_native, Walkable_Park_Access_all_people_of_color, Walkable_Park_Access_white, Walkable_Park_Access_low__75_city_income_, Walkable_Park_Access_high__125_city_median_income_, Walkable_Park_Access_middle) #select only the columns we are interested in for the purpose of this research 
+```
+```{r}
+unwalkable_BIPOC_data <- unwalkable_BIPOC_data |>
+  mutate(Average.Score = (Walk.Score + Transit.Score + Bike.Score)/3) #create new column that takes the walk, transit, and bike scores to make an average score |>
+```
+```{r}
+unwalkability_BIPOC_white <- unwalkable_BIPOC_data |>
+  select(City, State, Average.Score, Walkable_Park_Access_all_residents, Walkable_Park_Access_all_people_of_color, Walkable_Park_Access_white) #create a table that highlights the disarities between people of color walkability to parks, white people walkability to parks, and all residents walkability to parks
+```
+```{r}
+raleigh_data <- data |>
+  filter(City == "Raleigh") # raleigh is one of the cities that is unwalkable for all residents but especially BIPOC, so make a data set just for raleigh
+```
